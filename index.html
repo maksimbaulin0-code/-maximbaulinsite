@@ -17,6 +17,7 @@
             --text: #fff;
         }
 
+        /* Общие настройки */
         * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
 
         body {
@@ -26,28 +27,61 @@
             overflow-x: hidden;
         }
 
+        /* Оверлей (экран входа) */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #overlay h1 {
+            color: #fff;
+            font-family: 'Inter';
+            margin-bottom: 20px;
+            letter-spacing: 10px;
+            font-size: 3vw;
+        }
+
+        .start-btn {
+            background: none;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 15px 40px;
+            cursor: pointer;
+            font-family: 'Syncopate';
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .start-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+
         /* Кастомный курсор */
         #cursor {
-            width: 20px;
-            height: 20px;
+            width: 20px; height: 20px;
             background: #fff;
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
             z-index: 9999;
             mix-blend-mode: difference;
-            transition: transform 0.1s ease;
         }
 
         #cursor-follower {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border: 1px solid #fff;
             border-radius: 50%;
             position: fixed;
             pointer-events: none;
             z-index: 9998;
-            transition: transform 0.15s ease-out;
         }
 
         /* Иллюзия фона */
@@ -69,7 +103,6 @@
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 20px;
         }
 
         .hero h1 {
@@ -114,17 +147,6 @@
             padding-left: 50px;
         }
 
-        .service-item::before {
-            content: 'CLICK CLICK CLICK';
-            position: absolute;
-            font-size: 12px;
-            bottom: 0;
-            left: -100%;
-            transition: 0.5s;
-        }
-
-        .service-item:hover::before { left: 0; }
-
         .tag {
             font-size: 14px;
             background: var(--accent);
@@ -133,7 +155,7 @@
             color: #000;
         }
 
-        /* Секция Битов (звуковая волна) */
+        /* Волна */
         .beats-section {
             height: 60vh;
             display: flex;
@@ -141,12 +163,10 @@
             align-items: center;
             background: #111;
             margin: 100px 0;
-            position: relative;
         }
 
         .wave-bar {
-            width: 10px;
-            height: 50px;
+            width: 10px; height: 50px;
             background: var(--accent);
             margin: 5px;
             border-radius: 5px;
@@ -158,10 +178,18 @@
             font-size: 12px;
             color: #555;
         }
-
     </style>
 </head>
 <body>
+
+    <div id="overlay">
+        <h1>MAXIM BAULIN</h1>
+        <button class="start-btn" onclick="startApp()">ACTIVATE SYSTEM</button>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="cursor"></div>
     <div id="cursor-follower"></div>
@@ -192,15 +220,30 @@
         </div>
     </section>
 
-    <div class="beats-section" id="wave-container">
-        </div>
+    <div class="beats-section" id="wave-container"></div>
 
     <footer class="footer">
         MAXIM BAULIN AGENCY © 2026 • NO BOUNDARIES
     </footer>
 
     <script>
-        // 1. Управление курсором
+        // Функция запуска при клике
+        function startApp() {
+            const music = document.getElementById('bg-music');
+            music.volume = 0.4;
+            music.play().catch(e => console.log("Музыка не смогла запуститься:", e));
+
+            gsap.to("#overlay", {
+                opacity: 0,
+                duration: 1.2,
+                ease: "power2.inOut",
+                onComplete: () => {
+                    document.getElementById('overlay').style.display = 'none';
+                }
+            });
+        }
+
+        // 1. Курсор
         const cursor = document.getElementById('cursor');
         const follower = document.getElementById('cursor-follower');
         const bg = document.getElementById('bg');
@@ -208,69 +251,49 @@
         document.addEventListener('mousemove', (e) => {
             gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0 });
             gsap.to(follower, { x: e.clientX - 10, y: e.clientY - 10, duration: 0.3 });
-
-            // Движение фона (иллюзия)
+            
             const moveX = (e.clientX - window.innerWidth / 2) * 0.05;
             const moveY = (e.clientY - window.innerHeight / 2) * 0.05;
             gsap.to(bg, { x: moveX, y: moveY, rotation: moveX * 0.02, duration: 1 });
         });
 
-        // 2. Звуковой движок (Web Audio API)
+        // 2. Звуковой движок для наведения
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(freq) {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.5);
+            osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // 3. Анимация появления заголовка
-        gsap.from("#main-title", {
-            duration: 2,
-            y: 100,
-            opacity: 0,
-            skewY: 10,
-            ease: "power4.out",
-            stagger: 0.1
-        });
-
-        // 4. Генерация "бешеной" волны битов
+        // 3. Волна
         const waveContainer = document.getElementById('wave-container');
         for (let i = 0; i < 30; i++) {
             const bar = document.createElement('div');
             bar.classList.add('wave-bar');
             waveContainer.appendChild(bar);
-
             gsap.to(bar, {
                 height: 200,
                 duration: 0.5 + Math.random(),
-                repeat: -1,
-                yoyo: true,
-                ease: "sine.inOut",
+                repeat: -1, yoyo: true,
                 backgroundColor: i % 2 === 0 ? "#ff3b30" : "#fff"
             });
         }
 
-        // 5. Анимация скролла для услуг
+        // 4. Скролл анимация
         gsap.registerPlugin(ScrollTrigger);
         document.querySelectorAll('.service-item').forEach(item => {
             gsap.from(item, {
-                scrollTrigger: {
-                    trigger: item,
-                    start: "top bottom-=100",
-                },
-                x: -100,
-                opacity: 0,
-                duration: 1
+                scrollTrigger: { trigger: item, start: "top bottom-=100" },
+                x: -100, opacity: 0, duration: 1
             });
         });
-
     </script>
 </body>
 </html>
