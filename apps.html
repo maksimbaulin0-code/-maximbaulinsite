@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOTS | MAXIM BAULIN</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        /* Те же стили, что выше */
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;900&display=swap');
+        :root { --accent: #ff3b30; --bg: #000; --text: #fff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Syncopate', sans-serif; }
+        #cursor { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; mix-blend-mode: difference; }
+        .illusion-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-conic-gradient(from 0deg, #111 0deg 30deg, #000 30deg 60deg); background-size: 100px 100px; opacity: 0.2; z-index: -1; }
+        .container { padding: 100px 50px; }
+        .back { text-decoration: none; color: var(--accent); font-size: 12px; margin-bottom: 50px; display: block; }
+        h1 { font-family: 'Inter'; font-size: 8vw; margin-bottom: 50px; }
+        .card { border: 1px solid #222; padding: 40px; margin-bottom: 20px; transition: 0.4s; }
+        .card:hover { border-color: var(--accent); background: #0a0a0a; padding-left: 60px; }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    <div class="illusion-bg"></div>
+    <div class="container">
+        <a href="index.html" class="back">← RETURN_TO_BASE</a>
+        <h1>AI_BOTS</h1>
+        <div class="card"><h3>TRADING_BOT</h3><p>Автоматизация сделок на DEX биржах.</p></div>
+        <div class="card"><h3>SUPPORT_AI</h3><p>Бот-консультант с нейросетью внутри.</p></div>
+    </div>
+    <script>
+        document.addEventListener('mousemove', (e) => gsap.to('#cursor', { x: e.clientX, y: e.clientY, duration: 0 }));
+        gsap.from(".card", { x: -100, opacity: 0, stagger: 0.2, duration: 1 });
+    </script>
+</body>
+</html>
