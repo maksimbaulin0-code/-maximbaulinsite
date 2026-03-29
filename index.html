@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>МАКСИМ БАУЛИН | DIGITAL AGENCY</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght@900&display=swap');
+
+        :root {
+            --accent: #ff3b30;
+            --bg: #000;
+            --text: #fff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Syncopate', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Кастомный курсор */
+        #cursor {
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            mix-blend-mode: difference;
+            transition: transform 0.1s ease;
+        }
+
+        #cursor-follower {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #fff;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.15s ease-out;
+        }
+
+        /* Иллюзия фона */
+        .illusion-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-conic-gradient(from 0deg, #111 0deg 30deg, #000 30deg 60deg);
+            background-size: 100px 100px;
+            opacity: 0.3;
+            z-index: -1;
+            transform: scale(1.2);
+        }
+
+        /* Главный экран */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hero h1 {
+            font-family: 'Inter', sans-serif;
+            font-size: 12vw;
+            line-height: 0.8;
+            text-transform: uppercase;
+            letter-spacing: -5px;
+            background: linear-gradient(90deg, #fff, #555, #fff);
+            background-size: 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientMove 3s infinite linear;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0%; }
+            100% { background-position: 200%; }
+        }
+
+        /* Услуги */
+        .services {
+            padding: 100px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-item {
+            font-size: 5vw;
+            padding: 40px 0;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-item:hover {
+            color: var(--accent);
+            padding-left: 50px;
+        }
+
+        .service-item::before {
+            content: 'CLICK CLICK CLICK';
+            position: absolute;
+            font-size: 12px;
+            bottom: 0;
+            left: -100%;
+            transition: 0.5s;
+        }
+
+        .service-item:hover::before { left: 0; }
+
+        .tag {
+            font-size: 14px;
+            background: var(--accent);
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: #000;
+        }
+
+        /* Секция Битов (звуковая волна) */
+        .beats-section {
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            margin: 100px 0;
+            position: relative;
+        }
+
+        .wave-bar {
+            width: 10px;
+            height: 50px;
+            background: var(--accent);
+            margin: 5px;
+            border-radius: 5px;
+        }
+
+        .footer {
+            padding: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #555;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-follower"></div>
+    <div class="illusion-bg" id="bg"></div>
+
+    <section class="hero">
+        <p style="color: var(--accent); margin-bottom: 20px;">[ AGENCY OF FUTURE ]</p>
+        <h1 id="main-title">МАКСИМ<br>БАУЛИН</h1>
+        <p style="margin-top: 30px; letter-spacing: 5px;">SITES • BOTS • APPS • BEATS</p>
+    </section>
+
+    <section class="services">
+        <div class="service-item" onmouseenter="playSound(440)">
+            <span>САЙТЫ</span>
+            <span class="tag">TOP LEVEL</span>
+        </div>
+        <div class="service-item" onmouseenter="playSound(520)">
+            <span>БОТЫ</span>
+            <span class="tag">AI INSIDE</span>
+        </div>
+        <div class="service-item" onmouseenter="playSound(650)">
+            <span>MINI APPS</span>
+            <span class="tag">TELEGRAM</span>
+        </div>
+        <div class="service-item" onmouseenter="playSound(880)">
+            <span>БИТЫ</span>
+            <span class="tag">EXCLUSIVE</span>
+        </div>
+    </section>
+
+    <div class="beats-section" id="wave-container">
+        </div>
+
+    <footer class="footer">
+        MAXIM BAULIN AGENCY © 2026 • NO BOUNDARIES
+    </footer>
+
+    <script>
+        // 1. Управление курсором
+        const cursor = document.getElementById('cursor');
+        const follower = document.getElementById('cursor-follower');
+        const bg = document.getElementById('bg');
+
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0 });
+            gsap.to(follower, { x: e.clientX - 10, y: e.clientY - 10, duration: 0.3 });
+
+            // Движение фона (иллюзия)
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.05;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.05;
+            gsap.to(bg, { x: moveX, y: moveY, rotation: moveX * 0.02, duration: 1 });
+        });
+
+        // 2. Звуковой движок (Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // 3. Анимация появления заголовка
+        gsap.from("#main-title", {
+            duration: 2,
+            y: 100,
+            opacity: 0,
+            skewY: 10,
+            ease: "power4.out",
+            stagger: 0.1
+        });
+
+        // 4. Генерация "бешеной" волны битов
+        const waveContainer = document.getElementById('wave-container');
+        for (let i = 0; i < 30; i++) {
+            const bar = document.createElement('div');
+            bar.classList.add('wave-bar');
+            waveContainer.appendChild(bar);
+
+            gsap.to(bar, {
+                height: 200,
+                duration: 0.5 + Math.random(),
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+                backgroundColor: i % 2 === 0 ? "#ff3b30" : "#fff"
+            });
+        }
+
+        // 5. Анимация скролла для услуг
+        gsap.registerPlugin(ScrollTrigger);
+        document.querySelectorAll('.service-item').forEach(item => {
+            gsap.from(item, {
+                scrollTrigger: {
+                    trigger: item,
+                    start: "top bottom-=100",
+                },
+                x: -100,
+                opacity: 0,
+                duration: 1
+            });
+        });
+
+    </script>
+</body>
+</html>
