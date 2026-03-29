@@ -8,28 +8,62 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;900&display=swap');
         :root { --accent: #ff3b30; --bg: #000; --text: #fff; }
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Syncopate', sans-serif; }
-        #cursor { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; mix-blend-mode: difference; }
-        .illusion-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-conic-gradient(from 0deg, #111 0deg 30deg, #000 30deg 60deg); background-size: 100px 100px; opacity: 0.2; z-index: -1; }
-        .container { padding: 100px 50px; }
-        .back { text-decoration: none; color: var(--accent); font-size: 12px; margin-bottom: 50px; display: block; }
-        h1 { font-family: 'Inter'; font-size: 8vw; margin-bottom: 50px; }
-        .twa-card { background: #111; border: 1px solid #333; padding: 50px; text-align: center; font-size: 30px; margin-bottom: 30px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: auto; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Syncopate', sans-serif; overflow-x: hidden; }
+        .illusion-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-conic-gradient(from 0deg, #111 0deg 30deg, #000 30deg 60deg); background-size: 100px 100px; opacity: 0.2; z-index: -1; pointer-events: none; }
+        .container { max-width: 800px; margin: 0 auto; padding: 100px 20px; }
+        .back { text-decoration: none; color: var(--accent); font-size: 12px; margin-bottom: 50px; display: inline-block; letter-spacing: 2px; }
+        h1 { font-family: 'Inter'; font-size: 8vw; margin-bottom: 40px; line-height: 0.9; }
+        .order-form { background: #0a0a0a; border: 1px solid #222; padding: 40px; position: relative; }
+        .order-form::before { content: '[ REQUEST_MODULE ]'; position: absolute; top: -10px; left: 20px; background: var(--bg); color: var(--accent); font-size: 10px; padding: 0 10px; }
+        .input-group { margin-bottom: 30px; }
+        input { width: 100%; background: none; border: none; border-bottom: 1px solid #333; color: #fff; padding: 15px 0; font-family: 'Inter'; font-size: 18px; outline: none; transition: 0.3s; }
+        input:focus { border-bottom-color: var(--accent); }
+        label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 2px; }
+        .submit-btn { background: var(--accent); color: #000; border: none; padding: 20px; width: 100%; font-family: 'Syncopate'; font-weight: 700; letter-spacing: 3px; cursor: pointer; transition: 0.4s; }
+        .submit-btn:hover { background: #fff; transform: translateY(-2px); }
+        .status-msg { margin-top: 20px; font-size: 14px; font-family: 'Inter'; text-align: center; min-height: 40px; color: var(--accent); }
     </style>
 </head>
 <body>
-    <div id="cursor"></div>
-    <div class="illusion-bg"></div>
+    <div class="illusion-bg" id="bg"></div>
     <div class="container">
         <a href="index.html" class="back">← RETURN_TO_BASE</a>
-        <h1>TELEGRAM_APPS</h1>
-        <div class="twa-card">CLICKER_GAME</div>
-        <div class="twa-card">NFT_MARKET_TWA</div>
+        <h1>ORDER<br>MINI_APP</h1>
+        <div class="order-form">
+            <div class="input-group"><label>Contact</label><input type="text" id="contact" placeholder="@username"></div>
+            <div class="input-group"><label>Idea</label><input type="text" id="idea" placeholder="Что создаем?"></div>
+            <button class="submit-btn" onclick="sendOrder()">SEND_REQUEST</button>
+            <div id="status" class="status-msg"></div>
+        </div>
     </div>
     <script>
-        document.addEventListener('mousemove', (e) => gsap.to('#cursor', { x: e.clientX, y: e.clientY, duration: 0 }));
-        gsap.from(".twa-card", { scale: 0.5, opacity: 0, stagger: 0.3, duration: 1 });
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.03;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.03;
+            gsap.to("#bg", { x: moveX, y: moveY, duration: 1 });
+        });
+
+        async function sendOrder() {
+            const contact = document.getElementById('contact').value;
+            const idea = document.getElementById('idea').value;
+            const status = document.getElementById('status');
+            if(!contact || !idea) { status.innerText = "FILL ALL FIELDS"; return; }
+
+            status.innerText = "WAITING FOR N8N...";
+            try {
+                const res = await fetch("https://scarface.app.n8n.cloud/webhook-test/93718ce1-51b8-47e1-87e5-5d81ca6bb7b0", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_contact: contact, project_description: idea })
+                });
+                const data = await res.json();
+                status.style.color = "#00ff00";
+                status.innerText = data.reply || "SUCCESSFULLY SENT!";
+            } catch (e) {
+                status.innerText = "CONNECTION ERROR";
+            }
+        }
     </script>
 </body>
 </html>
