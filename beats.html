@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATS | MAXIM BAULIN</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Inter:wght@400;900&display=swap');
+        :root { --accent: #ff3b30; --bg: #000; --text: #fff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Syncopate', sans-serif; }
+        #cursor { width: 20px; height: 20px; background: #fff; border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; mix-blend-mode: difference; }
+        .illusion-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-conic-gradient(from 0deg, #111 0deg 30deg, #000 30deg 60deg); background-size: 100px 100px; opacity: 0.2; z-index: -1; }
+        .container { padding: 100px 50px; }
+        .back { text-decoration: none; color: var(--accent); font-size: 12px; margin-bottom: 50px; display: block; }
+        h1 { font-family: 'Inter'; font-size: 8vw; color: var(--accent); }
+        .track { border-bottom: 1px solid #333; padding: 20px 0; display: flex; justify-content: space-between; }
+        .play-btn { color: #fff; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    <div class="illusion-bg"></div>
+    <div class="container">
+        <a href="index.html" class="back">← RETURN_TO_BASE</a>
+        <h1>HARD_BEATS</h1>
+        <div class="track"><span>DARK_TRAP_2026</span><span class="play-btn">[ PLAY ]</span></div>
+        <div class="track"><span>CYBER_PHONK</span><span class="play-btn">[ PLAY ]</span></div>
+    </div>
+    <script>
+        document.addEventListener('mousemove', (e) => gsap.to('#cursor', { x: e.clientX, y: e.clientY, duration: 0 }));
+        gsap.from(".track", { opacity: 0, x: 50, stagger: 0.2, duration: 1 });
+    </script>
+</body>
+</html>
