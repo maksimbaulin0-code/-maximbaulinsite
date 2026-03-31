@@ -119,7 +119,7 @@
             <button class="slider-btn next" id="next-slide" aria-label="Следующее фото">›</button>
         </div>
         <div class="slider-dots" id="slider-dots"></div>
-        <p class="slider-empty" id="slider-empty" hidden>Добавь фотографии в папку src/ (или перечисли их в src/photos.json)</p>
+        <p class="slider-empty" id="slider-empty" hidden>Добавь фотографии в папку src/ и укажи их в src/photos.json</p>
     </section>
 
     <footer class="footer">MAXIM BAULIN AGENCY © 2026</footer>
@@ -213,51 +213,24 @@
             startAutoplay();
         }
 
-        async function checkImages(candidates) {
-            const checks = await Promise.all(candidates.map(src => new Promise(resolve => {
-                const img = new Image();
-                img.onload = () => resolve(src);
-                img.onerror = () => resolve(null);
-                img.src = src;
-            })));
-            return checks.filter(Boolean);
-        }
-
-        async function getImagesFromManifest() {
-            try {
-                const response = await fetch('src/photos.json', { cache: 'no-store' });
-                if (!response.ok) return [];
-                const photoList = await response.json();
-                if (!Array.isArray(photoList)) return [];
-                return photoList.map(item => `src/${String(item).trim()}`).filter(Boolean);
-            } catch (_) {
-                return [];
-            }
-        }
-
-        async function getImagesFromDirectory() {
-            try {
-                const response = await fetch('src/', { cache: 'no-store' });
-                if (!response.ok) return [];
-                const html = await response.text();
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                const links = [...doc.querySelectorAll('a[href]')].map(a => a.getAttribute('href') || '');
-                const files = links
-                    .filter(href => /\.(png|jpe?g|webp|gif|avif)$/i.test(href))
-                    .map(href => href.replace(/^\/+/, ''))
-                    .map(href => href.startsWith('src/') ? href : `src/${href}`);
-                return [...new Set(files)].sort((a, b) => a.localeCompare(b, 'ru', { numeric: true }));
-            } catch (_) {
-                return [];
-            }
-        }
-
         async function initSlider() {
-            let images = await getImagesFromDirectory();
-            if (images.length === 0) {
-                images = await getImagesFromManifest();
-            }
-            images = await checkImages(images);
+            let images = [];
+            try {
+                const response = await fetch('src/photos.json');
+                if (response.ok) {
+                    const photoList = await response.json();
+                    if (Array.isArray(photoList)) {
+                        const candidates = photoList.map(item => `src/${item}`);
+                        const checks = await Promise.all(candidates.map(src => new Promise(resolve => {
+                            const img = new Image();
+                            img.onload = () => resolve(src);
+                            img.onerror = () => resolve(null);
+                            img.src = src;
+                        })));
+                        images = checks.filter(Boolean);
+                    }
+                }
+            } catch (_) {}
 
             if (images.length === 0) {
                 sliderEmpty.hidden = false;
