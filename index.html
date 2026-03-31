@@ -26,6 +26,40 @@
         @keyframes gradientMove { 0% { background-position: 0%; } 100% { background-position: 200%; } }
         
         .services { padding: 100px 20px; max-width: 1200px; margin: 0 auto; }
+        .photo-slider { max-width: 1200px; margin: 0 auto 80px; padding: 0 20px; }
+        .slider-title { font-size: 22px; letter-spacing: 4px; margin-bottom: 20px; text-transform: uppercase; color: var(--accent); }
+        .slider-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid #333; border-radius: 16px; background: #060606; }
+        .slider-track { display: flex; height: 100%; transition: transform 0.5s ease; }
+        .slide { min-width: 100%; height: 100%; }
+        .slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid #555;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.55);
+            font-size: 24px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .slider-btn.prev { left: 14px; }
+        .slider-btn.next { right: 14px; }
+        .slider-dots { display: flex; justify-content: center; gap: 10px; margin-top: 14px; }
+        .slider-dots button {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 0;
+            background: #444;
+            cursor: pointer;
+        }
+        .slider-dots button.active { background: var(--accent); }
+        .slider-empty { color: #888; text-align: center; padding: 30px 0; font-size: 12px; letter-spacing: 2px; }
         .service-item { font-size: 5vw; padding: 40px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; transition: all 0.4s; text-decoration: none; color: inherit; position: relative; }
         .service-item:hover { color: var(--accent); padding-left: 50px; }
         .view-projects { font-size: 14px; color: var(--accent); opacity: 0; transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; }
@@ -77,6 +111,17 @@
         </a>
     </section>
 
+    <section class="photo-slider" id="photo-slider">
+        <h2 class="slider-title">Галерея</h2>
+        <div class="slider-frame">
+            <button class="slider-btn prev" id="prev-slide" aria-label="Предыдущее фото">‹</button>
+            <div class="slider-track" id="slider-track"></div>
+            <button class="slider-btn next" id="next-slide" aria-label="Следующее фото">›</button>
+        </div>
+        <div class="slider-dots" id="slider-dots"></div>
+        <p class="slider-empty" id="slider-empty" hidden>Добавь фотографии в папку src/ (или перечисли их в src/photos.json)</p>
+    </section>
+
     <footer class="footer">MAXIM BAULIN AGENCY © 2026</footer>
 
     <script>
@@ -114,6 +159,125 @@
         document.querySelectorAll('.service-item').forEach(item => {
             gsap.from(item, { scrollTrigger: { trigger: item, start: "top bottom-=100" }, x: -100, opacity: 0, duration: 1 });
         });
+
+        const sliderTrack = document.getElementById('slider-track');
+        const sliderDots = document.getElementById('slider-dots');
+        const sliderEmpty = document.getElementById('slider-empty');
+        const prevSlideBtn = document.getElementById('prev-slide');
+        const nextSlideBtn = document.getElementById('next-slide');
+        let currentSlide = 0;
+        let autoplayId = null;
+        let slideCount = 0;
+
+        function renderSlider(images) {
+            slideCount = images.length;
+            sliderTrack.innerHTML = images.map((src, index) => `
+                <div class="slide">
+                    <img src="${src}" alt="Фото ${index + 1}">
+                </div>
+            `).join('');
+            sliderDots.innerHTML = images.map((_, index) => `
+                <button aria-label="Слайд ${index + 1}" data-slide="${index}" class="${index === 0 ? 'active' : ''}"></button>
+            `).join('');
+            sliderDots.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    goToSlide(Number(btn.dataset.slide));
+                    restartAutoplay();
+                });
+            });
+            goToSlide(0);
+            startAutoplay();
+        }
+
+        function goToSlide(index) {
+            if (slideCount === 0) return;
+            currentSlide = (index + slideCount) % slideCount;
+            sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+            sliderDots.querySelectorAll('button').forEach((dot, dotIndex) => {
+                dot.classList.toggle('active', dotIndex === currentSlide);
+            });
+        }
+
+        function startAutoplay() {
+            stopAutoplay();
+            autoplayId = setInterval(() => goToSlide(currentSlide + 1), 4000);
+        }
+
+        function stopAutoplay() {
+            if (autoplayId) clearInterval(autoplayId);
+            autoplayId = null;
+        }
+
+        function restartAutoplay() {
+            stopAutoplay();
+            startAutoplay();
+        }
+
+        async function checkImages(candidates) {
+            const checks = await Promise.all(candidates.map(src => new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => resolve(src);
+                img.onerror = () => resolve(null);
+                img.src = src;
+            })));
+            return checks.filter(Boolean);
+        }
+
+        async function getImagesFromManifest() {
+            try {
+                const response = await fetch('src/photos.json', { cache: 'no-store' });
+                if (!response.ok) return [];
+                const photoList = await response.json();
+                if (!Array.isArray(photoList)) return [];
+                return photoList.map(item => `src/${String(item).trim()}`).filter(Boolean);
+            } catch (_) {
+                return [];
+            }
+        }
+
+        async function getImagesFromDirectory() {
+            try {
+                const response = await fetch('src/', { cache: 'no-store' });
+                if (!response.ok) return [];
+                const html = await response.text();
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const links = [...doc.querySelectorAll('a[href]')].map(a => a.getAttribute('href') || '');
+                const files = links
+                    .filter(href => /\.(png|jpe?g|webp|gif|avif)$/i.test(href))
+                    .map(href => href.replace(/^\/+/, ''))
+                    .map(href => href.startsWith('src/') ? href : `src/${href}`);
+                return [...new Set(files)].sort((a, b) => a.localeCompare(b, 'ru', { numeric: true }));
+            } catch (_) {
+                return [];
+            }
+        }
+
+        async function initSlider() {
+            let images = await getImagesFromDirectory();
+            if (images.length === 0) {
+                images = await getImagesFromManifest();
+            }
+            images = await checkImages(images);
+
+            if (images.length === 0) {
+                sliderEmpty.hidden = false;
+                prevSlideBtn.disabled = true;
+                nextSlideBtn.disabled = true;
+                return;
+            }
+
+            renderSlider(images);
+            prevSlideBtn.addEventListener('click', () => {
+                goToSlide(currentSlide - 1);
+                restartAutoplay();
+            });
+            nextSlideBtn.addEventListener('click', () => {
+                goToSlide(currentSlide + 1);
+                restartAutoplay();
+            });
+        }
+
+        initSlider();
     </script>
 </body>
 </html>
